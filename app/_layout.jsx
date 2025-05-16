@@ -11,7 +11,7 @@ const tokenCache = {
     },
 };
 
-const CLERKPUBLIC_KEY = 'pk_test_cHJlY2lvdXMtZ3JhY2tsZS03OS5jbGVyay5hY2NvdW50cy5kZXYk';
+const CLERKPUBLIC_KEY = 'pk_test_xxxxxxxx';
 
 export default function App() {
     return (
