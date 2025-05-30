@@ -1,75 +1,119 @@
 import React, { useCallback } from 'react';
-import { View, Text, Button, StyleSheet, Platform } from 'react-native';
-import { useOAuth, useUser, useClerk } from '@clerk/clerk-expo';
-import * as WebBrowser from 'expo-web-browser';
-import { SignedIn, SignedOut } from '@clerk/clerk-expo';
+import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { useOAuth } from '@clerk/clerk-expo';
 import { useSignIn } from '@clerk/clerk-expo';
-import { ActivityIndicator } from 'react-native-web';
+import * as WebBrowser from 'expo-web-browser';
+import { Ionicons } from '@expo/vector-icons';
 
 WebBrowser.maybeCompleteAuthSession();
 
 export default function LoginScreen() {
-    const { signOut } = useClerk();
-    const { user, isSignedIn } = useUser();
     const { isLoaded } = useSignIn();
-
     const { startOAuthFlow } = useOAuth({ strategy: 'oauth_google' });
 
-    const onSuccessfulLogin = useCallback(() => {
-        // Redirecionar para a tela inicial ou qualquer outra ação após o login
-        console.log('Login bem-sucedido!');
-        // Aqui você pode navegar para outra tela ou realizar qualquer ação necessária
-
-    }, []);
-
-    const signInWithGoogle = async () => {
+    const signInWithGoogle = useCallback(async () => {
         try {
-            const { createdSessionId, setActive } = await startOAuthFlow()
+            const { createdSessionId, setActive } = await startOAuthFlow();
 
             if (createdSessionId && setActive) {
                 await setActive({ session: createdSessionId });
-                // Redirecionar após login bem-sucedido
-                onSuccessfulLogin();
+                // O AuthHandler no _layout.jsx já cuida do redirecionamento
+                console.log('Login bem-sucedido!');
             }
         } catch (err) {
             console.error("OAuth error", err);
         }
-    };
-
+    }, [startOAuthFlow]);
 
     if (!isLoaded) {
         return (
-            <ActivityIndicator size="large" color="#0000ff" />
+            <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color="#6366F1" />
+            </View>
         );
     }
 
     return (
-        <>
-            <SignedIn>
-                <View style={styles.container}>
-                    <Text style={styles.titulo}>Bem-vindo, {user?.primaryEmailAddress?.emailAddress}!</Text>
-                    <Button title="Sair" onPress={() => signOut()} color='red' />
-                </View>
-            </SignedIn>
-            <SignedOut>
-                <View style={styles.container}>
-                    <Text style={styles.titulo}>Login com Google</Text>
-                    <Button title="Entrar com Google" onPress={signInWithGoogle} />
-                </View>
-            </SignedOut>
-        </>
+        <View style={styles.container}>
+            <View style={styles.header}>
+                <Text style={styles.title}>Bem-vindo!</Text>
+                <Text style={styles.subtitle}>
+                    Faça login para acessar sua conta
+                </Text>
+            </View>
+
+            <View style={styles.content}>
+                <TouchableOpacity
+                    style={styles.googleButton}
+                    onPress={signInWithGoogle}
+                    activeOpacity={0.8}
+                >
+                    <Ionicons name="logo-google" size={24} color="#ffffff" />
+                    <Text style={styles.googleButtonText}>
+                        Continuar com Google
+                    </Text>
+                </TouchableOpacity>
+            </View>
+        </View>
     );
 }
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        justifyContent: 'center',
-        padding: 24,
+        backgroundColor: '#F9FAFB',
     },
-    titulo: {
-        fontSize: 24,
-        marginBottom: 20,
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#F9FAFB',
+    },
+    header: {
+        paddingTop: 80,
+        paddingHorizontal: 24,
+        paddingBottom: 40,
+        alignItems: 'center',
+    },
+    title: {
+        fontSize: 32,
+        fontWeight: 'bold',
+        color: '#1F2937',
+        marginBottom: 8,
         textAlign: 'center',
+    },
+    subtitle: {
+        fontSize: 16,
+        color: '#6B7280',
+        textAlign: 'center',
+        lineHeight: 24,
+    },
+    content: {
+        flex: 1,
+        paddingHorizontal: 24,
+        justifyContent: 'center',
+    },
+    googleButton: {
+        backgroundColor: '#6366F1',
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 16,
+        paddingHorizontal: 24,
+        borderRadius: 12,
+        shadowColor: '#6366F1',
+        shadowOffset: {
+            width: 0,
+            height: 4,
+        },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+        elevation: 8,
+    },
+    googleButtonText: {
+        color: '#ffffff',
+        fontSize: 16,
+        fontWeight: '600',
+        marginLeft: 12,
     },
 });
